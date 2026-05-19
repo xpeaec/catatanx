@@ -24,6 +24,69 @@
   --r: 10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+  <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDJXKUuAsWMlk-XgzedTGdDfIz2tYO7kZI",
+  authDomain: "catatanx-bf043.firebaseapp.com",
+  projectId: "catatanx-bf043",
+  storageBucket: "catatanx-bf043.firebasestorage.app",
+  messagingSenderId: "944320958564",
+  appId: "1:944320958564:web:698b0e4502d4a24c3b0f71",
+  measurementId: "G-GNZYB6JN18"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function backupLocalStorage() {
+
+  const allData = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    allData[key] = localStorage.getItem(key);
+  }
+
+  await setDoc(doc(db, "catatanx", "backup"), {
+    data: allData
+  });
+
+  console.log("Backup cloud berhasil");
+}
+
+async function restoreLocalStorage() {
+
+  const docRef = doc(db, "catatanx", "backup");
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+
+    const firebaseData = docSnap.data().data;
+
+    Object.keys(firebaseData).forEach(key => {
+      localStorage.setItem(key, firebaseData[key]);
+    });
+
+    console.log("Restore cloud berhasil");
+
+    location.reload();
+  }
+}
+
+window.backupCloud = backupLocalStorage;
+window.restoreCloud = restoreLocalStorage;
+
+</script>
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 button{cursor:pointer;font-family:inherit}
 input,select,textarea{font-family:inherit}
