@@ -24,69 +24,6 @@
   --r: 10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-  <script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDJXKUuAsWMlk-XgzedTGdDfIz2tYO7kZI",
-  authDomain: "catatanx-bf043.firebaseapp.com",
-  projectId: "catatanx-bf043",
-  storageBucket: "catatanx-bf043.firebasestorage.app",
-  messagingSenderId: "944320958564",
-  appId: "1:944320958564:web:698b0e4502d4a24c3b0f71",
-  measurementId: "G-GNZYB6JN18"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-async function backupLocalStorage() {
-
-  const allData = {};
-
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    allData[key] = localStorage.getItem(key);
-  }
-
-  await setDoc(doc(db, "catatanx", "backup"), {
-    data: allData
-  });
-
-  console.log("Backup cloud berhasil");
-}
-
-async function restoreLocalStorage() {
-
-  const docRef = doc(db, "catatanx", "backup");
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-
-    const firebaseData = docSnap.data().data;
-
-    Object.keys(firebaseData).forEach(key => {
-      localStorage.setItem(key, firebaseData[key]);
-    });
-
-    console.log("Restore cloud berhasil");
-
-    location.reload();
-  }
-}
-
-window.backupCloud = backupLocalStorage;
-window.restoreCloud = restoreLocalStorage;
-
-</script>
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 button{cursor:pointer;font-family:inherit}
 input,select,textarea{font-family:inherit}
@@ -109,7 +46,13 @@ input,select,textarea{font-family:inherit}
 .main{flex:1;overflow:hidden}
 .topbar{height:54px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--surface);position:sticky;top:0;z-index:50}
 .topbar-title{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px}
 .topbar-period{font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:4px 10px;border-radius:6px}
+.sync-status{font-size:11px;padding:4px 10px;border-radius:6px;font-weight:600;display:flex;align-items:center;gap:5px;transition:.3s}
+.sync-status.idle{background:rgba(90,96,122,.15);color:var(--muted);border:1px solid var(--border)}
+.sync-status.saving{background:rgba(77,159,255,.15);color:var(--blue);border:1px solid rgba(77,159,255,.3)}
+.sync-status.saved{background:rgba(45,217,143,.15);color:var(--green);border:1px solid rgba(45,217,143,.3)}
+.sync-status.error{background:rgba(255,92,122,.15);color:var(--red);border:1px solid rgba(255,92,122,.3)}
 .content{padding:24px;max-width:1100px}
 .page{display:none}.page.active{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -229,6 +172,23 @@ td.pos{color:var(--green)}td.neg{color:var(--red)}
 .info-box{background:rgba(77,159,255,.07);border:1px solid rgba(77,159,255,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;display:flex;align-items:flex-start;gap:8px}
 
 /*══════════════════════════════════
+  CLOUD SETUP MODAL
+══════════════════════════════════*/
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.step-list{counter-reset:steps;margin-bottom:20px}
+.step-item{counter-increment:steps;display:flex;gap:12px;margin-bottom:14px;font-size:13px;line-height:1.6}
+.step-item::before{content:counter(steps);background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-item a{color:var(--blue);text-decoration:none}
+.step-item a:hover{text-decoration:underline}
+.step-item code{background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:4px;font-family:'Fira Code',monospace;font-size:12px;color:var(--gold)}
+.token-input-wrap{position:relative}
+.token-input-wrap input{width:100%;padding-right:80px}
+.token-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:5px;font-size:11px;cursor:pointer}
+
+/*══════════════════════════════════
   MODERN UI ENHANCEMENT
 ══════════════════════════════════*/
 body{
@@ -270,10 +230,51 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 }
 .blur-1{top:-120px;left:-120px;background:rgba(91,108,249,.15)}
 .blur-2{bottom:-120px;right:-120px;background:rgba(45,217,200,.10)}
-
 </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════
+     CLOUD SETUP MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="setup-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">☁️ Setup Cloud Sync</div>
+    <div class="modal-sub">
+      Data kamu akan disimpan di <strong>GitHub Gist</strong> — gratis, aman, dan bisa diakses dari perangkat manapun. Lakukan sekali saja.
+    </div>
+    <div class="step-list">
+      <div class="step-item">
+        Buka <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>. Login jika belum.
+      </div>
+      <div class="step-item">
+        Di <strong>Note</strong>, isi nama bebas misal <code>catatanx</code>. Di bagian <strong>Expiration</strong>, pilih <code>No expiration</code>.
+      </div>
+      <div class="step-item">
+        Scroll ke bawah, centang <code>gist</code> (di bawah bagian <strong>Select scopes</strong>).
+      </div>
+      <div class="step-item">
+        Klik <strong>Generate token</strong>. Copy token yang muncul (dimulai dengan <code>ghp_</code>).
+      </div>
+      <div class="step-item">
+        Paste token di bawah lalu klik <strong>Simpan & Mulai</strong>.
+      </div>
+    </div>
+    <label class="field" style="margin-bottom:14px">
+      GitHub Personal Access Token
+      <div class="token-input-wrap">
+        <input type="password" id="setup-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <button class="token-toggle" onclick="toggleTokenVis()">👁 Tampilkan</button>
+      </div>
+    </label>
+    <div id="setup-alert" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-danger" onclick="skipSetup()">Lewati (data lokal)</button>
+      <button class="btn btn-primary" id="setup-btn" onclick="mulaiSetup()">☁️ Simpan & Mulai</button>
+    </div>
+  </div>
+</div>
+
 <div class="layout">
 
 <!-- SIDEBAR -->
@@ -303,7 +304,10 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 <div class="main">
 <div class="topbar">
   <div class="topbar-title" id="topbar-title">Dashboard</div>
-  <div class="topbar-period" id="topbar-period">Jan 2025</div>
+  <div class="topbar-right">
+    <div class="sync-status idle" id="sync-status">☁️ Cloud</div>
+    <div class="topbar-period" id="topbar-period">Jan 2025</div>
+  </div>
 </div>
 <div class="content">
 
@@ -465,19 +469,15 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 <div class="page" id="page-valas">
   <div class="page-title">Tabungan Valas BCA</div>
   <div class="page-sub">Catatan tabungan valuta asing di BCA mBanking — otomatis tercatat di Transaksi Harian</div>
-
   <div class="info-box">
     ℹ️ Setiap kali kamu input "Setor" (beli valas) atau "Tarik" (jual valas), transaksi otomatis tercatat di halaman Transaksi Harian sebagai keluar/masuk dari akun BCA.
   </div>
-
   <div class="kpi-row">
     <div class="kpi gold"><div class="kpi-label">Total Nilai IDR</div><div class="kpi-val" id="v-total-idr">Rp 0</div><div class="kpi-note">semua valas</div></div>
     <div class="kpi b"><div class="kpi-label">USD</div><div class="kpi-val" id="v-usd-val">$ 0.00</div><div class="kpi-note" id="v-usd-idr">≈ Rp 0</div></div>
     <div class="kpi p"><div class="kpi-label">MYR</div><div class="kpi-val" id="v-myr-val">RM 0.00</div><div class="kpi-note" id="v-myr-idr">≈ Rp 0</div></div>
     <div class="kpi t"><div class="kpi-label">Valas Lainnya</div><div class="kpi-val" id="v-lain-val">Rp 0</div><div class="kpi-note">estimasi IDR</div></div>
   </div>
-
-  <!-- Form tambah transaksi valas -->
   <div class="card">
     <div class="card-head"><span class="card-title">➕ Catat Transaksi Valas</span></div>
     <div class="card-body">
@@ -516,8 +516,6 @@ filter:blur(100px);pointer-events:none;z-index:-1;
       <div id="vf-alert" style="margin-top:10px"></div>
     </div>
   </div>
-
-  <!-- Update kurs -->
   <div class="card">
     <div class="card-head"><span class="card-title">⚙️ Kurs Referensi (untuk estimasi nilai)</span></div>
     <div class="card-body">
@@ -528,8 +526,6 @@ filter:blur(100px);pointer-events:none;z-index:-1;
       <div id="kurs-alert" style="margin-top:8px"></div>
     </div>
   </div>
-
-  <!-- Riwayat transaksi valas -->
   <div class="card">
     <div class="card-head"><span class="card-title">Riwayat Transaksi Valas</span></div>
     <div class="card-body">
@@ -539,8 +535,6 @@ filter:blur(100px);pointer-events:none;z-index:-1;
       </table></div>
     </div>
   </div>
-
-  <!-- Saldo per mata uang -->
   <div class="card">
     <div class="card-head"><span class="card-title">📊 Posisi Saldo per Mata Uang</span></div>
     <div class="card-body" id="valas-saldo-list"></div>
@@ -569,19 +563,15 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 <div class="page" id="page-hutang">
   <div class="page-title">Hutang & Cicilan</div>
   <div class="page-sub">Pantau semua hutang — bisa tambah, bayar, dan hapus</div>
-
   <div class="info-box">
     ℹ️ Klik <strong>Catat Pembayaran</strong> pada setiap hutang untuk otomatis mencatat di Transaksi Harian sebagai pengeluaran.
   </div>
-
   <div class="kpi-row">
     <div class="kpi r"><div class="kpi-label">Total Hutang Awal</div><div class="kpi-val" id="h-total">Rp 0</div></div>
     <div class="kpi g"><div class="kpi-label">Sudah Dibayar</div><div class="kpi-val" id="h-bayar">Rp 0</div></div>
     <div class="kpi gold"><div class="kpi-label">Sisa Hutang</div><div class="kpi-val" id="h-sisa">Rp 0</div></div>
     <div class="kpi b"><div class="kpi-label">Jumlah Hutang</div><div class="kpi-val" id="h-count">0</div><div class="kpi-note">aktif</div></div>
   </div>
-
-  <!-- Form tambah hutang baru -->
   <div class="card">
     <div class="card-head"><span class="card-title">➕ Tambah Hutang Baru</span></div>
     <div class="card-body">
@@ -592,9 +582,7 @@ filter:blur(100px);pointer-events:none;z-index:-1;
       </div>
       <div class="form-grid g3" style="margin-top:12px">
         <label class="field">Bunga % / Tahun<input type="number" id="hf-bunga" placeholder="0" min="0" step="0.1"/></label>
-        <label class="field">Akun Bayar (debit dari rekening mana)
-          <select id="hf-akun"></select>
-        </label>
+        <label class="field">Akun Bayar (debit dari rekening mana)<select id="hf-akun"></select></label>
         <label class="field">Keterangan<input type="text" id="hf-ket" placeholder="Bank, tenor, dll..."/></label>
       </div>
       <div class="form-row-btn" style="margin-top:14px">
@@ -603,11 +591,7 @@ filter:blur(100px);pointer-events:none;z-index:-1;
       <div id="hf-alert" style="margin-top:10px"></div>
     </div>
   </div>
-
-  <!-- Daftar hutang -->
   <div id="hutang-list"></div>
-
-  <!-- Modal bayar hutang -->
   <div id="bayar-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:90%;max-width:420px">
       <div style="font-weight:700;font-size:16px;margin-bottom:16px">💸 Catat Pembayaran Hutang</div>
@@ -648,6 +632,32 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 <div class="page" id="page-pengaturan">
   <div class="page-title">Pengaturan</div>
   <div class="page-sub">Konfigurasi periode dan nama laporan</div>
+
+  <!-- CLOUD SYNC SETTINGS -->
+  <div class="card">
+    <div class="card-head"><span class="card-title">☁️ Cloud Sync (GitHub Gist)</span></div>
+    <div class="card-body">
+      <div id="cloud-status-box" style="margin-bottom:16px"></div>
+      <div class="form-grid g2">
+        <label class="field">GitHub Token
+          <div class="token-input-wrap">
+            <input type="password" id="s-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+            <button class="token-toggle" onclick="toggleTokenVisSettings()">👁 Tampilkan</button>
+          </div>
+        </label>
+        <label class="field">Gist ID (otomatis diisi setelah setup)
+          <input type="text" id="s-gist-id" placeholder="Diisi otomatis..." readonly style="opacity:.6"/>
+        </label>
+      </div>
+      <div class="form-row-btn" style="margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-success" onclick="testAndSaveToken()">🔗 Hubungkan / Update Token</button>
+        <button class="btn btn-primary" onclick="manualSync()">🔄 Sync Sekarang</button>
+        <button class="btn btn-danger" onclick="hapusCloud()">🗑️ Hapus Konfigurasi Cloud</button>
+      </div>
+      <div id="cloud-alert" style="margin-top:10px"></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-head"><span class="card-title">Periode Laporan</span></div>
     <div class="card-body">
@@ -684,6 +694,109 @@ filter:blur(100px);pointer-events:none;z-index:-1;
 </div><!-- /layout -->
 
 <script>
+// ══════════════════════════════════
+// CLOUD SYNC — GITHUB GIST
+// ══════════════════════════════════
+const LOCAL_CONFIG_KEY = 'fin_cloud_cfg'; // Hanya config (token+gistId) yang disimpan lokal
+const GIST_FILENAME = 'catatanx_data.json';
+
+let cloudCfg = { token: '', gistId: '' };
+let syncTimeout = null;
+let isSyncing = false;
+
+function loadCloudCfg() {
+  try {
+    const raw = localStorage.getItem(LOCAL_CONFIG_KEY);
+    if (raw) cloudCfg = JSON.parse(raw);
+  } catch(e) {}
+}
+
+function saveCloudCfg() {
+  localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(cloudCfg));
+}
+
+function setSyncStatus(state, msg) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.className = 'sync-status ' + state;
+  const icons = { idle:'☁️', saving:'🔄', saved:'✅', error:'⚠️' };
+  el.textContent = (icons[state] || '☁️') + ' ' + msg;
+}
+
+// Fetch data dari Gist
+async function fetchFromGist() {
+  if (!cloudCfg.token || !cloudCfg.gistId) return null;
+  try {
+    setSyncStatus('saving', 'Memuat...');
+    const res = await fetch(`https://api.github.com/gists/${cloudCfg.gistId}`, {
+      headers: { 'Authorization': `token ${cloudCfg.token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) { setSyncStatus('error', 'Gagal load'); return null; }
+    const gist = await res.json();
+    const content = gist.files[GIST_FILENAME]?.content;
+    if (!content) return null;
+    setSyncStatus('saved', 'Tersinkron');
+    return JSON.parse(content);
+  } catch(e) {
+    setSyncStatus('error', 'Error');
+    return null;
+  }
+}
+
+// Simpan data ke Gist
+async function saveToGist(data) {
+  if (!cloudCfg.token || !cloudCfg.gistId) return false;
+  if (isSyncing) return false;
+  isSyncing = true;
+  setSyncStatus('saving', 'Menyimpan...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${cloudCfg.gistId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${cloudCfg.token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } } })
+    });
+    isSyncing = false;
+    if (res.ok) { setSyncStatus('saved', 'Tersimpan'); return true; }
+    else { setSyncStatus('error', 'Gagal simpan'); return false; }
+  } catch(e) {
+    isSyncing = false;
+    setSyncStatus('error', 'Offline');
+    return false;
+  }
+}
+
+// Buat Gist baru
+async function createGist(token, data) {
+  const res = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify({
+      description: 'CatatanX — Data Keuangan Bulanan',
+      public: false,
+      files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } }
+    })
+  });
+  if (!res.ok) return null;
+  const gist = await res.json();
+  return gist.id;
+}
+
+// Verifikasi token valid
+async function verifyToken(token) {
+  const res = await fetch('https://api.github.com/user', {
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  return res.ok;
+}
+
 // ══════════════════════════════════
 // DATA & STORAGE
 // ══════════════════════════════════
@@ -783,7 +896,6 @@ const DEFAULT = {
     { instrumen:'P2P Lending', modal:0, tambahan:0, nilaiSkrg:0, platform:'' },
     { instrumen:'Lainnya', modal:0, tambahan:0, nilaiSkrg:0, platform:'' },
   ],
-  // HUTANG: dinamis, bisa tambah/hapus
   hutang: [
     { id:1, nama:'KPR (Kredit Pemilikan Rumah)', total:0, terbayar:0, anggaranBayar:0, bunga:0, akunBayar:'BCA', ket:'' },
     { id:2, nama:'KKB (Kredit Kendaraan Bermotor)', total:0, terbayar:0, anggaranBayar:0, bunga:0, akunBayar:'BCA', ket:'' },
@@ -795,49 +907,176 @@ const DEFAULT = {
     { id:8, nama:'Cicilan HP / Elektronik', total:0, terbayar:0, anggaranBayar:0, bunga:0, akunBayar:'BCA', ket:'' },
     { id:9, nama:'Cicilan Lainnya', total:0, terbayar:0, anggaranBayar:0, bunga:0, akunBayar:'BCA', ket:'' },
   ],
-  // VALAS: transaksi valas + kurs referensi
   valasTransaksi: [],
   valasKurs: {
-    USD: 16300,
-    MYR: 3500,
-    SGD: 12200,
-    EUR: 17800,
-    JPY: 108,
-    GBP: 20900,
-    AUD: 10700,
-    CNY: 2260,
-    SAR: 4350,
-    Other: 1,
+    USD: 16300, MYR: 3500, SGD: 12200, EUR: 17800, JPY: 108,
+    GBP: 20900, AUD: 10700, CNY: 2260, SAR: 4350, Other: 1,
   },
 };
 
-function load() {
+function migrateData(stored) {
+  if (!stored.valasTransaksi) stored.valasTransaksi = [];
+  if (!stored.valasKurs) stored.valasKurs = JSON.parse(JSON.stringify(DEFAULT.valasKurs));
+  if (stored.hutang) {
+    stored.hutang = stored.hutang.map(h => {
+      if (h.realisasiBayar !== undefined && h.terbayar === undefined) {
+        h.terbayar = h.realisasiBayar; delete h.realisasiBayar;
+      }
+      if (!h.id) h.id = Date.now() + Math.random();
+      if (!h.akunBayar) h.akunBayar = 'BCA';
+      return h;
+    });
+  }
+  return stored;
+}
+
+function loadLocal() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORE_KEY));
     if (!stored) return JSON.parse(JSON.stringify(DEFAULT));
-    // Merge: pastikan field baru tersedia walau data lama
-    if (!stored.valasTransaksi) stored.valasTransaksi = [];
-    if (!stored.valasKurs) stored.valasKurs = JSON.parse(JSON.stringify(DEFAULT.valasKurs));
-    // Migrate hutang lama ke format baru (realisasiBayar -> terbayar)
-    if (stored.hutang) {
-      stored.hutang = stored.hutang.map(h => {
-        if (h.realisasiBayar !== undefined && h.terbayar === undefined) {
-          h.terbayar = h.realisasiBayar;
-          delete h.realisasiBayar;
-        }
-        if (!h.id) h.id = Date.now() + Math.random();
-        if (!h.akunBayar) h.akunBayar = 'BCA';
-        return h;
-      });
-    }
-    return stored;
+    return migrateData(stored);
   } catch(e) { return JSON.parse(JSON.stringify(DEFAULT)); }
 }
 
-function save(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+function saveLocal(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
 
-let DB = load();
-let _bayarHutangId = null; // untuk modal bayar
+// Debounced cloud save: 2 detik setelah perubahan terakhir
+function save(d) {
+  saveLocal(d);
+  if (cloudCfg.token && cloudCfg.gistId) {
+    clearTimeout(syncTimeout);
+    setSyncStatus('saving', 'Menunggu...');
+    syncTimeout = setTimeout(() => saveToGist(d), 2000);
+  }
+}
+
+let DB = loadLocal();
+let _bayarHutangId = null;
+
+// ══════════════════════════════════
+// SETUP MODAL
+// ══════════════════════════════════
+function toggleTokenVis() {
+  const inp = document.getElementById('setup-token');
+  const btn = inp.nextElementSibling;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈 Sembunyikan'; }
+  else { inp.type = 'password'; btn.textContent = '👁 Tampilkan'; }
+}
+
+function toggleTokenVisSettings() {
+  const inp = document.getElementById('s-token');
+  const btn = inp.nextElementSibling;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈 Sembunyikan'; }
+  else { inp.type = 'password'; btn.textContent = '👁 Tampilkan'; }
+}
+
+function showSetupModal() {
+  document.getElementById('setup-modal').style.display = 'flex';
+}
+
+function hideSetupModal() {
+  document.getElementById('setup-modal').style.display = 'none';
+}
+
+function skipSetup() {
+  hideSetupModal();
+  setSyncStatus('idle', 'Lokal saja');
+  startApp();
+}
+
+async function mulaiSetup() {
+  const token = document.getElementById('setup-token').value.trim();
+  if (!token) {
+    document.getElementById('setup-alert').innerHTML = '<div class="alert alert-warn">⚠️ Token tidak boleh kosong!</div>';
+    return;
+  }
+
+  const btn = document.getElementById('setup-btn');
+  btn.textContent = '⏳ Memverifikasi...';
+  btn.disabled = true;
+
+  // Verifikasi token
+  const valid = await verifyToken(token);
+  if (!valid) {
+    document.getElementById('setup-alert').innerHTML = '<div class="alert alert-warn">❌ Token tidak valid! Pastikan token dimulai dengan ghp_ dan scope "gist" dicentang.</div>';
+    btn.textContent = '☁️ Simpan & Mulai';
+    btn.disabled = false;
+    return;
+  }
+
+  // Buat Gist baru
+  btn.textContent = '⏳ Membuat Gist...';
+  const gistId = await createGist(token, DB);
+  if (!gistId) {
+    document.getElementById('setup-alert').innerHTML = '<div class="alert alert-warn">❌ Gagal membuat Gist. Coba lagi.</div>';
+    btn.textContent = '☁️ Simpan & Mulai';
+    btn.disabled = false;
+    return;
+  }
+
+  cloudCfg = { token, gistId };
+  saveCloudCfg();
+  hideSetupModal();
+  setSyncStatus('saved', 'Terhubung');
+  startApp();
+}
+
+async function testAndSaveToken() {
+  const token = document.getElementById('s-token').value.trim();
+  if (!token) { showAlert('cloud-alert', '⚠️ Token tidak boleh kosong!', 'info'); return; }
+
+  showAlert('cloud-alert', '⏳ Memverifikasi token...', 'info');
+  const valid = await verifyToken(token);
+  if (!valid) { showAlert('cloud-alert', '❌ Token tidak valid!', 'warn'); return; }
+
+  // Jika sudah ada gistId lama, test dulu
+  let gistId = cloudCfg.gistId;
+  if (!gistId) {
+    showAlert('cloud-alert', '⏳ Membuat Gist baru...', 'info');
+    gistId = await createGist(token, DB);
+    if (!gistId) { showAlert('cloud-alert', '❌ Gagal membuat Gist!', 'warn'); return; }
+  }
+
+  cloudCfg = { token, gistId };
+  saveCloudCfg();
+  updateCloudStatusBox();
+  setSyncStatus('saved', 'Terhubung');
+  await saveToGist(DB);
+  showAlert('cloud-alert', '✅ Cloud sync berhasil dikonfigurasi dan data tersimpan!');
+}
+
+async function manualSync() {
+  if (!cloudCfg.token || !cloudCfg.gistId) {
+    showAlert('cloud-alert', '⚠️ Belum dikonfigurasi. Masukkan token dulu.', 'warn'); return;
+  }
+  showAlert('cloud-alert', '⏳ Menyinkronkan data...', 'info');
+  const ok = await saveToGist(DB);
+  if (ok) showAlert('cloud-alert', '✅ Data berhasil disinkronkan ke cloud!');
+  else showAlert('cloud-alert', '❌ Gagal sinkronisasi. Cek koneksi.', 'warn');
+}
+
+function hapusCloud() {
+  if (!confirm('Hapus konfigurasi cloud? Data tetap ada di lokal.')) return;
+  cloudCfg = { token: '', gistId: '' };
+  saveCloudCfg();
+  document.getElementById('s-token').value = '';
+  document.getElementById('s-gist-id').value = '';
+  updateCloudStatusBox();
+  setSyncStatus('idle', 'Lokal saja');
+  showAlert('cloud-alert', '✅ Konfigurasi cloud dihapus. Data tersimpan lokal.');
+}
+
+function updateCloudStatusBox() {
+  const el = document.getElementById('cloud-status-box');
+  if (!el) return;
+  if (cloudCfg.token && cloudCfg.gistId) {
+    el.innerHTML = `<div class="alert alert-success">✅ Cloud sync aktif — data tersimpan di GitHub Gist (ID: <code style="font-family:'Fira Code',monospace;font-size:11px">${cloudCfg.gistId}</code>)</div>`;
+    document.getElementById('s-token').value = cloudCfg.token;
+    document.getElementById('s-gist-id').value = cloudCfg.gistId;
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ Cloud sync belum dikonfigurasi — data hanya tersimpan di browser ini.</div>`;
+  }
+}
 
 // ══════════════════════════════════
 // HELPERS
@@ -889,7 +1128,7 @@ function renderPage(p) {
   else if (p === 'investasi') renderInvestasi();
   else if (p === 'hutang') renderHutang();
   else if (p === 'akun') renderAkun();
-  else if (p === 'pengaturan') renderPengaturan();
+  else if (p === 'pengaturan') { renderPengaturan(); updateCloudStatusBox(); }
 }
 
 // ══════════════════════════════════
@@ -935,12 +1174,10 @@ function populateFormDropdowns() {
   const jenis = document.getElementById('f-jenis').value;
   const katSel = document.getElementById('f-kategori');
   const akunSel = document.getElementById('f-akun');
-
   katSel.innerHTML = '';
   const map = jenis === 'Masuk' ? KATEGORI_MASUK_MAP : KATEGORI_KELUAR_MAP;
   Object.keys(map).forEach(k => { katSel.innerHTML += `<option>${k}</option>`; });
   updateSubKat();
-
   akunSel.innerHTML = DB.akun.map(a => `<option>${a.nama}</option>`).join('');
 }
 
@@ -1012,7 +1249,6 @@ function renderTransaksi() {
     </tr>`).join('');
 }
 
-// Set today's date on form init
 function initTglForm() {
   const els = ['f-tgl', 'vf-tgl', 'bm-tgl'];
   const today = new Date().toISOString().split('T')[0];
@@ -1105,7 +1341,6 @@ function simpanTabungan() { save(DB); showAlert('pe-alert', '✅ Tabungan disimp
 // TABUNGAN VALAS
 // ══════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // auto-hitung IDR saat input jumlah/kurs valas
   const jmlInput = document.getElementById('vf-jumlah');
   const kursInput = document.getElementById('vf-kurs');
   const idrInput = document.getElementById('vf-idr');
@@ -1130,7 +1365,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderValas() {
-  // Hitung saldo per mata uang
   const saldo = {};
   DB.valasTransaksi.forEach(v => {
     if (!saldo[v.currency]) saldo[v.currency] = 0;
@@ -1138,33 +1372,24 @@ function renderValas() {
     else saldo[v.currency] -= v.jumlah;
   });
 
-  // KPI
   let totalIdr = 0;
-  Object.entries(saldo).forEach(([cur, jml]) => {
-    const kurs = DB.valasKurs[cur] || 0;
-    totalIdr += jml * kurs;
-  });
+  Object.entries(saldo).forEach(([cur, jml]) => { totalIdr += jml * (DB.valasKurs[cur] || 0); });
 
   document.getElementById('v-total-idr').textContent = rp(totalIdr);
   document.getElementById('v-usd-val').textContent = `$ ${(saldo['USD'] || 0).toFixed(2)}`;
   document.getElementById('v-usd-idr').textContent = `≈ ${rp((saldo['USD'] || 0) * (DB.valasKurs['USD'] || 0))}`;
   document.getElementById('v-myr-val').textContent = `RM ${(saldo['MYR'] || 0).toFixed(2)}`;
   document.getElementById('v-myr-idr').textContent = `≈ ${rp((saldo['MYR'] || 0) * (DB.valasKurs['MYR'] || 0))}`;
-  const lainTotal = Object.entries(saldo)
-    .filter(([c]) => c !== 'USD' && c !== 'MYR')
-    .reduce((s, [c, v]) => s + v * (DB.valasKurs[c] || 0), 0);
+  const lainTotal = Object.entries(saldo).filter(([c]) => c !== 'USD' && c !== 'MYR').reduce((s, [c, v]) => s + v * (DB.valasKurs[c] || 0), 0);
   document.getElementById('v-lain-val').textContent = rp(lainTotal);
 
-  // Kurs form
   const kursForm = document.getElementById('kurs-form');
   kursForm.innerHTML = Object.entries(DB.valasKurs).map(([cur, val]) =>
     `<label class="field">${CURRENCY_FLAG[cur] || '🌐'} ${cur} (Rp/1 ${cur})
-      <input type="number" value="${val}" min="0" onchange="DB.valasKurs['${cur}']=parseFloat(this.value)||0"
-        style="font-family:'Fira Code',monospace"/>
+      <input type="number" value="${val}" min="0" onchange="DB.valasKurs['${cur}']=parseFloat(this.value)||0" style="font-family:'Fira Code',monospace"/>
     </label>`
   ).join('');
 
-  // Tabel riwayat
   const tbody = document.getElementById('tbl-valas');
   const list = [...DB.valasTransaksi].sort((a, b) => b.tgl.localeCompare(a.tgl));
   if (!list.length) {
@@ -1185,7 +1410,6 @@ function renderValas() {
     }).join('');
   }
 
-  // Saldo per mata uang
   const saldoList = document.getElementById('valas-saldo-list');
   const allCurrencies = Object.keys(saldo).filter(c => saldo[c] !== 0);
   if (!allCurrencies.length) {
@@ -1197,10 +1421,7 @@ function renderValas() {
         const idr = jml * (DB.valasKurs[cur] || 0);
         const sym = CURRENCY_SYMBOL[cur] || '';
         return `<div class="valas-item" style="margin:0">
-          <div class="valas-header">
-            <div class="valas-flag">${CURRENCY_FLAG[cur] || '🌐'}</div>
-            <div class="valas-name">${cur}</div>
-          </div>
+          <div class="valas-header"><div class="valas-flag">${CURRENCY_FLAG[cur] || '🌐'}</div><div class="valas-name">${cur}</div></div>
           <div style="font-family:'Fira Code',monospace;font-size:20px;font-weight:700;color:var(--gold)">${sym} ${jml.toFixed(2)}</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">≈ ${rp(idr)}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">Kurs: ${rp(DB.valasKurs[cur] || 0)}</div>
@@ -1208,7 +1429,6 @@ function renderValas() {
       }).join('') + `</div>`;
   }
 
-  // Init tanggal form valas
   const vTgl = document.getElementById('vf-tgl');
   if (vTgl && !vTgl.value) vTgl.value = new Date().toISOString().split('T')[0];
 }
@@ -1226,34 +1446,19 @@ function tambahValas() {
   if (idr <= 0) { showAlert('vf-alert', '⚠️ Nilai IDR tidak boleh 0. Masukkan kurs!', 'info'); return; }
 
   const id = Date.now();
-
-  // Simpan ke valas transaksi
   DB.valasTransaksi.push({ id, tgl, currency, jenis, jumlah, kurs, idr, catatan });
 
-  // Otomatis catat ke Transaksi Harian
-  const jenisTransaksi = jenis === 'Setor' ? 'Keluar' : 'Masuk'; // Setor valas = uang keluar dari BCA
+  const jenisTransaksi = jenis === 'Setor' ? 'Keluar' : 'Masuk';
   const katValas = jenis === 'Setor' ? '💵 VALAS' : '💵 VALAS (JUAL)';
   const subValas = jenis === 'Setor' ? `Beli Valas ${currency}` : `Jual Valas ${currency}`;
   const sym = CURRENCY_SYMBOL[currency] || '';
   const catatanAuto = `${jenis} ${currency} ${sym}${jumlah.toFixed(2)} @ ${rp(kurs)}${catatan ? ' — ' + catatan : ''}`;
 
-  DB.transaksi.push({
-    id: id + 1,
-    tgl,
-    jenis: jenisTransaksi,
-    nominal: idr,
-    kategori: katValas,
-    sub: subValas,
-    metode: 'Transfer Bank',
-    akun: 'BCA',
-    catatan: catatanAuto,
-    source: 'valas',
-    valasId: id,
-  });
+  DB.transaksi.push({ id: id + 1, tgl, jenis: jenisTransaksi, nominal: idr, kategori: katValas, sub: subValas, metode: 'Transfer Bank', akun: 'BCA', catatan: catatanAuto, source: 'valas', valasId: id });
 
   save(DB);
   renderValas();
-  showAlert('vf-alert', `✅ Transaksi valas ${currency} berhasil dicatat & tercermin di Transaksi Harian!`);
+  showAlert('vf-alert', `✅ Transaksi valas ${currency} berhasil dicatat!`);
   document.getElementById('vf-jumlah').value = '';
   document.getElementById('vf-idr').value = '';
   document.getElementById('vf-catatan').value = '';
@@ -1266,11 +1471,7 @@ function hapusValas(id) {
   save(DB); renderValas();
 }
 
-function simpanKurs() {
-  save(DB);
-  showAlert('kurs-alert', '✅ Kurs referensi disimpan!');
-  renderValas();
-}
+function simpanKurs() { save(DB); showAlert('kurs-alert', '✅ Kurs referensi disimpan!'); renderValas(); }
 
 // ══════════════════════════════════
 // INVESTASI
@@ -1303,7 +1504,6 @@ function simpanInvestasi() { save(DB); showAlert('pe-alert', '✅ Investasi disi
 // HUTANG (DINAMIS)
 // ══════════════════════════════════
 function renderHutang() {
-  // Init akun dropdown
   document.getElementById('hf-akun').innerHTML = akunOptions('BCA');
 
   let totalHutang = 0, totalBayar = 0, aktif = 0;
@@ -1336,10 +1536,8 @@ function renderHutang() {
           ${h.ket ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${h.ket}</div>` : ''}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          ${lunas
-            ? `<span class="badge badge-in" style="font-size:12px">✅ LUNAS</span>`
-            : `<button class="btn btn-success btn-sm" onclick="bukaModalBayar(${h.id})">💸 Catat Bayar</button>`
-          }
+          ${lunas ? `<span class="badge badge-in" style="font-size:12px">✅ LUNAS</span>`
+            : `<button class="btn btn-success btn-sm" onclick="bukaModalBayar(${h.id})">💸 Catat Bayar</button>`}
           <button class="btn btn-danger btn-sm" onclick="hapusHutang(${h.id})">🗑️</button>
         </div>
       </div>
@@ -1372,12 +1570,9 @@ function tambahHutang() {
   if (!nama) { showAlert('hf-alert', '⚠️ Nama hutang wajib diisi!', 'info'); return; }
   if (total <= 0) { showAlert('hf-alert', '⚠️ Total hutang harus lebih dari 0!', 'info'); return; }
 
-  const newId = Date.now();
-  DB.hutang.push({ id: newId, nama, total, terbayar: 0, anggaranBayar: cicilan, bunga, akunBayar: akun, ket });
-  save(DB);
-  renderHutang();
+  DB.hutang.push({ id: Date.now(), nama, total, terbayar: 0, anggaranBayar: cicilan, bunga, akunBayar: akun, ket });
+  save(DB); renderHutang();
   showAlert('hf-alert', `✅ Hutang "${nama}" berhasil ditambahkan!`);
-
   document.getElementById('hf-nama').value = '';
   document.getElementById('hf-total').value = '';
   document.getElementById('hf-cicilan').value = '';
@@ -1388,7 +1583,7 @@ function tambahHutang() {
 function hapusHutang(id) {
   const h = DB.hutang.find(x => x.id === id);
   if (!h) return;
-  if (!confirm(`Hapus hutang "${h.nama}"? Riwayat pembayaran terkait di Transaksi Harian akan tetap ada.`)) return;
+  if (!confirm(`Hapus hutang "${h.nama}"?`)) return;
   DB.hutang = DB.hutang.filter(x => x.id !== id);
   save(DB); renderHutang();
 }
@@ -1401,12 +1596,10 @@ function bukaModalBayar(hutangId) {
   document.getElementById('bayar-nama').textContent = `Hutang: ${h.nama} | Sisa: ${rp(sisa)}`;
   document.getElementById('bm-nominal').value = h.anggaranBayar || '';
   document.getElementById('bm-akun').innerHTML = akunOptions(h.akunBayar || 'BCA');
-  const bmTgl = document.getElementById('bm-tgl');
-  bmTgl.value = new Date().toISOString().split('T')[0];
+  document.getElementById('bm-tgl').value = new Date().toISOString().split('T')[0];
   document.getElementById('bm-catatan').value = '';
   document.getElementById('bm-alert').innerHTML = '';
-  const modal = document.getElementById('bayar-modal');
-  modal.style.display = 'flex';
+  document.getElementById('bayar-modal').style.display = 'flex';
 }
 
 function tutupModalBayar() {
@@ -1417,40 +1610,20 @@ function tutupModalBayar() {
 function konfirmasiBayar() {
   const h = DB.hutang.find(x => x.id === _bayarHutangId);
   if (!h) return;
-
   const tgl = document.getElementById('bm-tgl').value;
   const nominal = parseFloat(document.getElementById('bm-nominal').value) || 0;
   const akun = document.getElementById('bm-akun').value;
   const catatan = document.getElementById('bm-catatan').value;
 
   if (!tgl || nominal <= 0) { showAlert('bm-alert', '⚠️ Tanggal dan nominal wajib diisi!', 'info'); return; }
-
   const sisa = h.total - (h.terbayar || 0);
   if (nominal > sisa) { showAlert('bm-alert', `⚠️ Bayar melebihi sisa hutang (${rp(sisa)})!`, 'info'); return; }
 
-  // Update terbayar
   h.terbayar = (h.terbayar || 0) + nominal;
+  DB.transaksi.push({ id: Date.now(), tgl, jenis: 'Keluar', nominal, kategori: '💳 HUTANG & CICILAN', sub: `Bayar ${h.nama}`, metode: 'Transfer Bank', akun, catatan: `Bayar hutang: ${h.nama}${catatan ? ' — ' + catatan : ''}`, source: 'hutang', hutangId: h.id });
 
-  // Otomatis catat ke Transaksi Harian
-  const id = Date.now();
-  DB.transaksi.push({
-    id,
-    tgl,
-    jenis: 'Keluar',
-    nominal,
-    kategori: '💳 HUTANG & CICILAN',
-    sub: `Bayar ${h.nama}`,
-    metode: 'Transfer Bank',
-    akun,
-    catatan: `Bayar hutang: ${h.nama}${catatan ? ' — ' + catatan : ''}`,
-    source: 'hutang',
-    hutangId: h.id,
-  });
-
-  save(DB);
-  tutupModalBayar();
-  renderHutang();
-  showAlert('hf-alert', `✅ Pembayaran ${rp(nominal)} untuk "${h.nama}" dicatat & tercermin di Transaksi Harian!`);
+  save(DB); tutupModalBayar(); renderHutang();
+  showAlert('hf-alert', `✅ Pembayaran ${rp(nominal)} untuk "${h.nama}" dicatat!`);
 }
 
 // ══════════════════════════════════
@@ -1536,7 +1709,6 @@ function renderDashboard() {
   const totalSaldoAkun = DB.akun.reduce((s, a) => s + getSaldoAkun(a.nama), 0);
   const totalHutang = DB.hutang.reduce((s, h) => s + (h.total - (h.terbayar || 0)), 0);
 
-  // Total valas dalam IDR
   const saldoValas = {};
   DB.valasTransaksi.forEach(v => {
     if (!saldoValas[v.currency]) saldoValas[v.currency] = 0;
@@ -1557,7 +1729,6 @@ function renderDashboard() {
   sb.textContent = rpFull(saldoBersih);
   sb.style.color = saldoBersih >= 0 ? 'var(--green)' : 'var(--red)';
 
-  // Donut pengeluaran per kategori
   const katMap = {};
   DB.transaksi.filter(t => t.jenis === 'Keluar').forEach(t => {
     const k = t.kategori || '🔧 LAINNYA';
@@ -1567,7 +1738,6 @@ function renderDashboard() {
   const entries = Object.entries(katMap).sort((a, b) => b[1] - a[1]);
   renderDonut('d-donut', 'd-donut-legend', entries, donutColors);
 
-  // Rekening saldo
   const rekEl = document.getElementById('d-rek-list');
   rekEl.innerHTML = DB.akun.map(a => {
     const s = getSaldoAkun(a.nama);
@@ -1577,7 +1747,6 @@ function renderDashboard() {
     </div>`;
   }).join('') || '<div class="empty" style="padding:16px">Belum ada saldo</div>';
 
-  // Recent transaksi
   const recent = [...DB.transaksi].sort((a, b) => b.tgl.localeCompare(a.tgl)).slice(0, 8);
   const rEl = document.getElementById('d-recent');
   rEl.innerHTML = recent.length ? recent.map(t => `<tr>
@@ -1598,8 +1767,7 @@ function renderDonut(svgId, legendId, entries, colors) {
   const total = entries.reduce((s, e) => s + e[1], 0);
   if (!total || !entries.length) {
     svg.innerHTML = `<circle cx="70" cy="70" r="55" fill="none" stroke="var(--border)" stroke-width="20"/><text x="70" y="75" text-anchor="middle" font-size="11" fill="var(--muted)">Kosong</text>`;
-    legend.innerHTML = '';
-    return;
+    legend.innerHTML = ''; return;
   }
   let offset = -90, paths = '', legendHTML = '';
   const r = 55, cx = 70, cy = 70;
@@ -1614,47 +1782,61 @@ function renderDonut(svgId, legendId, entries, colors) {
     const y2 = cy + r * Math.sin(toRad(offset + angle));
     const large = angle > 180 ? 1 : 0;
     const col = colors[i % colors.length];
-
     paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${col}" opacity="0.9"/>`;
-    legendHTML += `<div class="donut-item">
-      <div class="donut-dot" style="background:${col}"></div>
-      <div class="donut-name">${name.replace(/^[^\s]+ /, '')}</div>
-      <div class="donut-amt">${rp(val)}</div>
-    </div>`;
+    legendHTML += `<div class="donut-item"><div class="donut-dot" style="background:${col}"></div><div class="donut-name">${name.replace(/^[^\s]+ /, '')}</div><div class="donut-amt">${rp(val)}</div></div>`;
     offset += angle;
   });
 
-  // Hole
   paths += `<circle cx="${cx}" cy="${cy}" r="35" fill="var(--card)"/>`;
   paths += `<text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="9" fill="var(--muted)">Total</text>`;
   paths += `<text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="10" fill="var(--text)" font-weight="600">${rp(total).replace('Rp ', '')}</text>`;
-
   svg.innerHTML = paths;
   legend.innerHTML = legendHTML;
 }
 
 // ══════════════════════════════════
-// INIT
+// INIT — dengan cloud sync
 // ══════════════════════════════════
-updatePeriodUI();
-populateFormDropdowns();
-initTglForm();
-renderDashboard();
+async function startApp() {
+  // Jika ada cloud config, coba load data dari Gist
+  if (cloudCfg.token && cloudCfg.gistId) {
+    setSyncStatus('saving', 'Memuat data...');
+    const cloudData = await fetchFromGist();
+    if (cloudData) {
+      DB = migrateData(cloudData);
+      saveLocal(DB); // cache lokal
+      setSyncStatus('saved', 'Data dimuat');
+    } else {
+      setSyncStatus('error', 'Gagal load cloud');
+    }
+  } else {
+    setSyncStatus('idle', 'Lokal saja');
+  }
 
-// Modern interaction
-document.addEventListener("mousemove",(e)=>{
-const x = e.clientX / window.innerWidth;
-const y = e.clientY / window.innerHeight;
-document.body.style.backgroundPosition = `${x * 40}px ${y * 40}px`;
+  updatePeriodUI();
+  populateFormDropdowns();
+  initTglForm();
+  renderDashboard();
+}
+
+loadCloudCfg();
+
+// Tampilkan modal setup jika belum ada konfigurasi cloud
+if (!cloudCfg.token || !cloudCfg.gistId) {
+  showSetupModal();
+} else {
+  startApp();
+}
+
+document.addEventListener("mousemove", (e) => {
+  const x = e.clientX / window.innerWidth;
+  const y = e.clientY / window.innerHeight;
+  document.body.style.backgroundPosition = `${x * 40}px ${y * 40}px`;
 });
-
 </script>
 
-<!-- BACKGROUND BLUR -->
 <div class="blur-bg blur-1"></div>
 <div class="blur-bg blur-2"></div>
-
-<!-- FLOATING BUTTON -->
 <button class="fab" onclick="goto('harian')">+</button>
 
 </body>
