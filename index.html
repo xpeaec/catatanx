@@ -1166,19 +1166,125 @@ function renderPage(p) {
 //  DROPDOWNS
 // ═══════════════════════════════════════
 const KAT_KELUAR = {
-  '🍽️ MAKANAN & MINUMAN':['Belanja Bahan Makanan / Grocery','Makan di Luar / Restoran','Kopi & Minuman','Snack & Jajanan','Delivery / GoFood / GrabFood'],
-  '🚗 TRANSPORTASI':['Bensin / BBM','Ojek Online / Taksi','Parkir & Tol','Servis Kendaraan','Transportasi Umum'],
-  '🏠 RUMAH & UTILITAS':['Sewa / Cicilan KPR','Listrik','Air (PDAM)','Gas / LPG','Internet','Pembantu / ART'],
-  '📱 KOMUNIKASI':['Pulsa / Paket Data','Telepon / Wifi','Langganan Streaming'],
-  '🛒 BELANJA KEBUTUHAN':['Sabun, Shampo, Toiletries','Perlengkapan Rumah','Pakaian & Alas Kaki','Perawatan Diri (Salon/Spa)'],
-  '❤️ KESEHATAN':['Dokter / Konsultasi','Obat-obatan','Suplemen / Vitamin','Gym / Olahraga'],
-  '🎓 PENDIDIKAN':['SPP / Sekolah / Kuliah','Kursus / Les / Pelatihan','Buku & Alat Tulis'],
-  '🎉 HIBURAN & REKREASI':['Bioskop / Konser','Liburan / Wisata','Hobi','Langganan Apps/Games'],
-  '🤝 SOSIAL & SUMBANGAN':['Arisan','Sumbangan / Donasi / Infak','Hadiah / Kado','Acara Keluarga'],
-  '💳 HUTANG & CICILAN':['Bayar KPR','Bayar KKB','Bayar KTA','Bayar Kartu Kredit','Bayar Pinjol','Bayar Hutang Teman','Cicilan Lainnya'],
-  '💵 VALAS':['Beli Valas USD','Beli Valas MYR','Beli Valas SGD','Beli Valas EUR','Beli Valas Lainnya'],
-  '🏦 TABUNGAN':['Setor Tabungan','Setor Dana Darurat','Setor Tabungan Tujuan'],
-  '🔧 LAINNYA':['Tak Terduga / Emergency','Lainnya 1','Lainnya 2'],
+  '🍽️ MAKANAN & MINUMAN':[
+    'Belanja Bahan Makanan / Grocery',
+    'Makan di Luar / Restoran',
+    'Kopi & Minuman',
+    'Snack & Jajanan',
+    'Delivery / GoFood / GrabFood'
+  ],
+
+  '🚗 TRANSPORTASI':[
+    'Bensin',
+    'Ojek Online / Taksi',
+    'Parkir & Tol',
+    'Servis Kendaraan',
+    'Transportasi Umum'
+  ],
+
+  '🏠 RUMAH & UTILITAS':[
+    'Sewa / Cicilan KPR',
+    'Listrik',
+    'Air (PDAM)',
+    'Gas / LPG',
+    'Internet',
+    'Pembantu / ART'
+  ],
+
+  '🧺 KEBUTUHAN KOS & HARIAN':[
+    'Laundry',
+    'Galon',
+    'Sabun',
+    'Shampo',
+    'Tissue',
+    'Peralatan Kos',
+    'Kebersihan Kamar'
+  ],
+
+  '🚬 ROKOK & NONGKRONG':[
+    'Rokok',
+    'Ngopi',
+    'Cafe',
+    'Nongkrong'
+  ],
+
+  '📱 KOMUNIKASI':[
+    'Pulsa / Paket Data',
+    'Telepon / Wifi',
+    'Langganan Streaming'
+  ],
+
+  '🛒 BELANJA KEBUTUHAN':[
+    'Sabun, Shampo, Toiletries',
+    'Perlengkapan Rumah',
+    'Pakaian & Alas Kaki',
+    'Perawatan Diri (Salon/Spa)'
+  ],
+
+  '❤️ KESEHATAN':[
+    'Dokter / Konsultasi',
+    'Obat-obatan',
+    'Suplemen / Vitamin',
+    'Gym / Olahraga'
+  ],
+
+  '🎓 PENDIDIKAN':[
+    'SPP / Sekolah / Kuliah',
+    'Kursus / Les / Pelatihan',
+    'Buku & Alat Tulis'
+  ],
+
+  '🎉 HIBURAN & REKREASI':[
+    'Bioskop / Konser',
+    'Liburan / Wisata',
+    'Hobi',
+    'Langganan Apps/Games'
+  ],
+
+  '🤝 SOSIAL & SUMBANGAN':[
+    'Arisan',
+    'Sumbangan / Donasi / Infak',
+    'Hadiah / Kado',
+    'Acara Keluarga'
+  ],
+
+  '💳 HUTANG & CICILAN':[
+    'Bayar KPR',
+    'Bayar KKB',
+    'Bayar KTA',
+    'Bayar Kartu Kredit',
+    'Bayar Pinjol',
+    'Bayar Hutang Teman',
+    'Cicilan Lainnya'
+  ],
+
+  '💵 VALAS':[
+    'Beli Valas USD',
+    'Beli Valas MYR',
+    'Beli Valas SGD',
+    'Beli Valas EUR',
+    'Beli Valas Lainnya'
+  ],
+
+  '🏦 TABUNGAN':[
+    'Setor Tabungan',
+    'Setor Dana Darurat',
+    'Setor Tabungan Tujuan'
+  ],
+
+  '🔄 TRANSFER INTERNAL':[
+    'BRI → Cash',
+    'BRI → BCA',
+    'BCA → Cash',
+    'Cash → DANA',
+    'Transfer Antar Rekening'
+  ],
+
+  '🔧 LAINNYA':[
+    'Tak Terduga / Emergency',
+    'Lainnya 1',
+    'Lainnya 2'
+  ],
 };
 const KAT_MASUK = {
   '📥 PEMASUKAN':['Gaji Pokok / Salary','Tunjangan','Bonus / THR','Freelance','Bisnis','Dividen','Transfer Masuk','Refund','Lainnya'],
@@ -1217,7 +1323,7 @@ function tambahTransaksi() {
   const akun = document.getElementById('f-akun').value;
   const catatan = document.getElementById('f-catatan').value;
   if (!tgl||nominal<=0) { showAlert('h-alert','⚠️ Tanggal dan nominal wajib diisi!','warn'); return; }
-  DB.transaksi.push({id:Date.now(),tgl,jenis,nominal,kategori,sub,metode,akun,catatan,source:'manual'});
+  DB.transaksi.unshift({id:Date.now(),tgl,jenis,nominal,kategori,sub,metode,akun,catatan,source:'manual'});
   save(DB); renderTransaksi(); showAlert('h-alert','✅ Transaksi berhasil ditambahkan!');
   document.getElementById('f-nominal').value='';
   document.getElementById('f-catatan').value='';
@@ -1283,7 +1389,7 @@ function simpanPemasukan() { save(DB); showAlert('p-alert','✅ Anggaran pemasuk
 //  PENGELUARAN
 // ═══════════════════════════════════════
 function realKeluarPerItem(item) {
-  return DB.transaksi.filter(t=>t.jenis==='Keluar'&&t.sub===item).reduce((s,t)=>s+t.nominal,0);
+  return DB.transaksi.filter(t=>t.jenis==='Keluar' && t.kategori!=='🔄 TRANSFER INTERNAL'&&t.sub===item).reduce((s,t)=>s+t.nominal,0);
 }
 
 function renderPengeluaran() {
@@ -1398,7 +1504,7 @@ function simpanSetoran() {
   if (!tgl||nominal<=0) { showAlert('setoran-alert','⚠️ Tanggal dan jumlah wajib diisi!','warn'); return; }
   tab.setoran.push({id:Date.now(),tgl,nominal,periode,catatan});
   // Juga catat di transaksi harian
-  DB.transaksi.push({
+  DB.transaksi.unshift({
     id:Date.now()+1,tgl,jenis:'Keluar',nominal,
     kategori:'🏦 TABUNGAN',sub:'Setor Tabungan',
     metode:'Transfer Bank',akun:tab.bank||'Cash',
@@ -1540,7 +1646,7 @@ function tambahValas() {
   const katV=jenis==='Setor'?'💵 VALAS':'💵 VALAS (JUAL)';
   const subV=jenis==='Setor'?`Beli Valas ${currency}`:`Jual Valas ${currency}`;
   const sym=CS[currency]||'';
-  DB.transaksi.push({id:id+1,tgl,jenis:jT,nominal:idr,kategori:katV,sub:subV,metode:'Transfer Bank',akun:'BCA',catatan:`${jenis} ${currency} ${sym}${jumlah.toFixed(2)} @ ${rp(kurs)}${catatan?' — '+catatan:''}`,source:'valas',valasId:id});
+  DB.transaksi.unshift({id:id+1,tgl,jenis:jT,nominal:idr,kategori:katV,sub:subV,metode:'Transfer Bank',akun:'BCA',catatan:`${jenis} ${currency} ${sym}${jumlah.toFixed(2)} @ ${rp(kurs)}${catatan?' — '+catatan:''}`,source:'valas',valasId:id});
   save(DB); renderValas(); showAlert('vf-alert',`✅ Transaksi valas ${currency} berhasil!`);
   document.getElementById('vf-jumlah').value='';
   document.getElementById('vf-idr').value='';
@@ -1678,7 +1784,7 @@ function konfirmasiBayar() {
   const sisa=h.total-(h.terbayar||0);
   if (nominal>sisa) { showAlert('bayar-alert',`⚠️ Melebihi sisa (${rp(sisa)})!`,'warn'); return; }
   h.terbayar=(h.terbayar||0)+nominal;
-  DB.transaksi.push({id:Date.now(),tgl,jenis:'Keluar',nominal,kategori:'💳 HUTANG & CICILAN',sub:`Bayar ${h.nama}`,metode:'Transfer Bank',akun,catatan:`Bayar hutang: ${h.nama}${catatan?' — '+catatan:''}`,source:'hutang',hutangId:h.id});
+  DB.transaksi.unshift({id:Date.now(),tgl,jenis:'Keluar',nominal,kategori:'💳 HUTANG & CICILAN',sub:`Bayar ${h.nama}`,metode:'Transfer Bank',akun,catatan:`Bayar hutang: ${h.nama}${catatan?' — '+catatan:''}`,source:'hutang',hutangId:h.id});
   save(DB); closeModal('modal-bayar'); renderHutang();
   showAlert('hf-alert',`✅ Bayar ${rp(nominal)} untuk "${h.nama}" dicatat!`);
 }
@@ -1690,7 +1796,7 @@ function getSaldoAkun(nama) {
   const akun=DB.akun.find(a=>a.nama===nama);
   const sw=akun?akun.saldoAwal:0;
   const masuk=DB.transaksi.filter(t=>t.akun===nama&&t.jenis==='Masuk').reduce((s,t)=>s+t.nominal,0);
-  const keluar=DB.transaksi.filter(t=>t.akun===nama&&t.jenis==='Keluar').reduce((s,t)=>s+t.nominal,0);
+  const keluar=DB.transaksi.filter(t=>t.akun===nama&&t.jenis==='Keluar' && t.kategori!=='🔄 TRANSFER INTERNAL').reduce((s,t)=>s+t.nominal,0);
   return sw+masuk-keluar;
 }
 
@@ -1784,9 +1890,9 @@ function renderDonut(svgId, legendId, entries, colors) {
 
 function renderDashboard() {
   const totMasuk=DB.transaksi.filter(t=>t.jenis==='Masuk').reduce((s,t)=>s+t.nominal,0);
-  const totKeluar=DB.transaksi.filter(t=>t.jenis==='Keluar').reduce((s,t)=>s+t.nominal,0);
+  const totKeluar=DB.transaksi.filter(t=>t.jenis==='Keluar' && t.kategori!=='🔄 TRANSFER INTERNAL').reduce((s,t)=>s+t.nominal,0);
   const nM=DB.transaksi.filter(t=>t.jenis==='Masuk').length;
-  const nK=DB.transaksi.filter(t=>t.jenis==='Keluar').length;
+  const nK=DB.transaksi.filter(t=>t.jenis==='Keluar' && t.kategori!=='🔄 TRANSFER INTERNAL').length;
   const saldoBersih=totMasuk-totKeluar;
   const totAkun=DB.akun.reduce((s,a)=>s+getSaldoAkun(a.nama),0);
   const totHutang=DB.hutang.reduce((s,h)=>s+(h.total-(h.terbayar||0)),0);
@@ -1804,7 +1910,7 @@ function renderDashboard() {
   sbEl.style.color=saldoBersih>=0?'var(--accent)':'var(--red)';
 
   const katMap={};
-  DB.transaksi.filter(t=>t.jenis==='Keluar').forEach(t=>{ const k=t.kategori||'🔧 LAINNYA'; katMap[k]=(katMap[k]||0)+t.nominal; });
+  DB.transaksi.filter(t=>t.jenis==='Keluar' && t.kategori!=='🔄 TRANSFER INTERNAL').forEach(t=>{ const k=t.kategori||'🔧 LAINNYA'; katMap[k]=(katMap[k]||0)+t.nominal; });
   renderDonut('d-donut','d-donut-legend',Object.entries(katMap).sort((a,b)=>b[1]-a[1]),DONUT_COLORS);
 
   const rekEl=document.getElementById('d-rek-list');
